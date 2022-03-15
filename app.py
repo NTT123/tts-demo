@@ -1,14 +1,14 @@
-import gradio as gr
 import os
 
-
 ## build wavegru-cpp
-os.system("go get github.com/bazelbuild/bazelisk")
+os.system("npm install -g @bazel/bazelisk")
 os.system("bazelisk build wavegru_mod -c opt --copt=-march=native")
 
-from inference import load_tacotron_model, load_wavegru_net, text_to_mel, mel_to_wav
-from wavegru_cpp import load_wavegru_cpp, extract_weight_mask
 
+import gradio as gr
+
+from inference import load_tacotron_model, load_wavegru_net, mel_to_wav, text_to_mel
+from wavegru_cpp import extract_weight_mask, load_wavegru_cpp
 
 alphabet, tacotron_net, tacotron_config = load_tacotron_model(
     "./alphabet.txt", "./tacotron.toml", "./pretrained_model_ljs_500k.ckpt"
