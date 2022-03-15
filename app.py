@@ -1,8 +1,7 @@
 import os
 
 ## build wavegru-cpp
-os.system("npm install -g @bazel/bazelisk")
-os.system("bazelisk build wavegru_mod -c opt --copt=-march=native")
+os.system("./bazelisk-linux-amd64 build wavegru_mod -c opt --copt=-march=native")
 
 
 import gradio as gr
