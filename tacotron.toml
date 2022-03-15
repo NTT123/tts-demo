@@ -1,0 +1,31 @@
+[tacotron]
+
+# training
+BATCH_SIZE = 64
+LR=1024e-6 # learning rate
+MODEL_PREFIX = "mono_tts_cbhg_small"
+LOG_DIR = "./logs"
+CKPT_DIR = "./ckpts"
+USE_MP = false  # use mixed-precision training
+
+# data
+TF_DATA_DIR = "./tf_data" # tensorflow data directory
+TF_GTA_DATA_DIR = "./tf_gta_data" # tf gta data directory
+SAMPLE_RATE = 24000 # convert to this sample rate if needed
+MEL_DIM = 80 # the dimension of melspectrogram features
+MEL_MIN = 1e-5
+PAD = "_" # padding character
+PAD_TOKEN = 0
+TEST_DATA_SIZE = 1024
+
+# model
+RR = 2 # reduction factor
+MAX_RR=2
+ATTN_BIAS = 0.0 # control how slow the attention moves forward
+SIGMOID_NOISE = 2.0
+PRENET_DIM = 128
+TEXT_DIM = 256
+RNN_DIM = 512
+ATTN_RNN_DIM = 256
+ATTN_HIDDEN_DIM = 128
+POSTNET_DIM = 512
