@@ -35,7 +35,10 @@ def text_to_mel(net, text, alphabet, config):
     """convert text to mel spectrogram"""
     text = english_cleaners(text)
     text = text + config["PAD"] * (100 - (len(text) % 100))
-    tokens = [alphabet.index(c) for c in text]
+    tokens = []
+    for c in text:
+        if c in alphabet:
+            tokens.append(alphabet.index(c))
     tokens = jnp.array(tokens, dtype=jnp.int32)
     mel = tacotron_inference_fn(net, tokens[None])
     return mel
