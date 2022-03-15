@@ -56,10 +56,10 @@ def load_wavegru_net(config_file, model_file):
     return config, net
 
 
-wavegru_inference = pax.pure(lambda net, mel: net.inference(mel, no_gru=False))
+wavegru_inference = pax.pure(lambda net, mel: net.inference(mel, no_gru=True))
 
 
-def mel_to_wav(net, mel, config):
+def mel_to_wav(net, netcpp, mel, config):
     """convert mel to wav"""
     if len(mel.shape) == 2:
         mel = mel[None]
@@ -69,10 +69,11 @@ def mel_to_wav(net, mel, config):
         [(0, 0), (pad, pad), (0, 0)],
         constant_values=np.log(config["mel_min"]),
     )
-    x = wavegru_inference(net, mel)
-    x = jax.device_get(x)
-
-    wav = librosa.mu_expand(x - 127, mu=255)
+    ft = wavegru_inference(net, mel)
+    ft = jax.device_get(ft[0])
+    wav = netcpp.inference(ft, 1.0)
+    wav = np.array(wav)
+    wav = librosa.mu_expand(wav - 127, mu=255)
     wav = librosa.effects.deemphasis(wav, coef=0.86)
     wav = wav * 2.0
     wav = wav / max(1.0, np.max(np.abs(wav)))
