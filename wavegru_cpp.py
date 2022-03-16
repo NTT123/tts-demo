@@ -1,10 +1,6 @@
 import numpy as np
 import sys
-
-sys.path.append("./bazel-bin")
 from wavegru_mod import WaveGRU
-
-sys.path.pop()
 
 
 def extract_weight_mask(net):
