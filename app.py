@@ -1,8 +1,8 @@
 import os
 
 ## build wavegru-cpp
-os.system("./bazelisk-linux-amd64 clean --expunge")
-os.system("./bazelisk-linux-amd64 build wavegru_mod -c opt --copt=-march=native")
+# os.system("./bazelisk-linux-amd64 clean --expunge")
+# os.system("./bazelisk-linux-amd64 build wavegru_mod -c opt --copt=-march=native")
 
 
 import gradio as gr
@@ -35,6 +35,11 @@ description = "WaveGRU text-to-speech demo."
 gr.Interface(
     fn=speak,
     inputs="text",
+    examples=[
+        "this is a test!",
+        "October arrived, spreading a damp chill over the grounds and into the castle. Madam Pomfrey, the nurse, was kept busy by a sudden spate of colds among the staff and students.",
+        "Artificial intelligence is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans",
+    ],
     outputs="audio",
     title=title,
     description=description,
