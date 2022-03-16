@@ -28,7 +28,7 @@ def load_tacotron_model(alphabet_file, config_file, model_file):
     return alphabet, net, config
 
 
-tacotron_inference_fn = pax.pure(lambda net, text: net.inference(text, max_len=10000))
+tacotron_inference_fn = pax.pure(lambda net, text: net.inference(text, max_len=500))
 
 
 def text_to_mel(net, text, alphabet, config):
