@@ -1,6 +1,7 @@
 import os
 
 ## build wavegru-cpp
+os.system("./bazelisk-linux-amd64 clean --expunge")
 os.system("./bazelisk-linux-amd64 build wavegru_mod -c opt --copt=-march=native")
 
 
@@ -14,9 +15,7 @@ alphabet, tacotron_net, tacotron_config = load_tacotron_model(
 )
 
 
-wavegru_config, wavegru_net = load_wavegru_net(
-    "./wavegru.yaml", "./wavegru_vocoder_tpu_gta_preemphasis_pruning_v7_0040000.ckpt"
-)
+wavegru_config, wavegru_net = load_wavegru_net("./wavegru.yaml", "./wavegru.ckpt")
 
 wave_cpp_weight_mask = extract_weight_mask(wavegru_net)
 wavecpp = load_wavegru_cpp(wave_cpp_weight_mask)
@@ -24,7 +23,9 @@ wavecpp = load_wavegru_cpp(wave_cpp_weight_mask)
 
 def speak(text):
     mel = text_to_mel(tacotron_net, text, alphabet, tacotron_config)
+    print(mel.shape)
     y = mel_to_wav(wavegru_net, wavecpp, mel, wavegru_config)
+    print(y.shape)
     return 24_000, y
 
 
