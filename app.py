@@ -1,6 +1,5 @@
-import os
-
 ## build wavegru-cpp
+# import os
 # os.system("./bazelisk-linux-amd64 clean --expunge")
 # os.system("./bazelisk-linux-amd64 build wavegru_mod -c opt --copt=-march=native")
 
@@ -18,14 +17,12 @@ alphabet, tacotron_net, tacotron_config = load_tacotron_model(
 wavegru_config, wavegru_net = load_wavegru_net("./wavegru.yaml", "./wavegru.ckpt")
 
 wave_cpp_weight_mask = extract_weight_mask(wavegru_net)
-wavecpp = load_wavegru_cpp(wave_cpp_weight_mask)
+wavecpp = load_wavegru_cpp(wave_cpp_weight_mask, wavegru_config["upsample_factors"][-1])
 
 
 def speak(text):
     mel = text_to_mel(tacotron_net, text, alphabet, tacotron_config)
-    print(mel.shape)
     y = mel_to_wav(wavegru_net, wavecpp, mel, wavegru_config)
-    print(y.shape)
     return 24_000, y
 
 
@@ -38,7 +35,7 @@ gr.Interface(
     examples=[
         "this is a test!",
         "October arrived, spreading a damp chill over the grounds and into the castle. Madam Pomfrey, the nurse, was kept busy by a sudden spate of colds among the staff and students.",
-        "Artificial intelligence is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans",
+        "Artificial intelligence is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans.",
     ],
     outputs="audio",
     title=title,

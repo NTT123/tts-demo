@@ -30,12 +30,11 @@ mat create_mat(int h, int w) {
 }
 
 struct WaveGRU {
-  int input_dim;
-  int embed_dim;
   int hidden_dim;
-  mat m1, m2, m3;
-  vec b1, b2, b3;
-  vec z, r, hh;
+  int repeat_factor;
+  mat m;
+  vec b;
+  vec z, r, hh, zrh;
   vec fco1, fco2;
   vec o1b, o2b;
   vec t;
@@ -43,30 +42,26 @@ struct WaveGRU {
   mat o1, o2;
   std::vector<vec> embed;
 
-  WaveGRU(int input_dim, int embed_dim, int hidden_dim)
-      : input_dim(input_dim),
-        embed_dim(embed_dim),
-        hidden_dim(hidden_dim),
-        b1(hidden_dim),
-        b2(hidden_dim),
-        b3(hidden_dim),
+  WaveGRU(int hidden_dim, int repeat_factor)
+      : hidden_dim(hidden_dim),
+        repeat_factor(repeat_factor),
+        b(3*hidden_dim),
+        t(3*hidden_dim),
+        zrh(3*hidden_dim),
         z(hidden_dim),
         r(hidden_dim),
         hh(hidden_dim),
         fco1(hidden_dim),
         fco2(256),
-        t(hidden_dim + input_dim + embed_dim),
         h(hidden_dim),
         o1b(hidden_dim),
         o2b(256) {
-    m1 = create_mat(input_dim + hidden_dim + embed_dim, hidden_dim);
-    m2 = create_mat(input_dim + hidden_dim + embed_dim, hidden_dim);
-    m3 = create_mat(input_dim + hidden_dim + embed_dim, hidden_dim);
+    m = create_mat(hidden_dim, 3*hidden_dim);
     o1 = create_mat(hidden_dim, hidden_dim);
     o2 = create_mat(hidden_dim, 256);
     embed = std::vector<vec>();
     for (int i = 0; i < 256; i++) {
-      embed.emplace_back(embed_dim);
+      embed.emplace_back(hidden_dim * 3);
       embed[i].FillRandom();
     }
   }
@@ -74,7 +69,7 @@ struct WaveGRU {
   void load_embed(fndarray embed_weights) {
     auto a_embed = embed_weights.unchecked<2>();
     for (int i = 0; i < 256; i++) {
-      for (int j = 0; j < embed_dim; j++) embed[i][j] = a_embed(i, j);
+      for (int j = 0; j < hidden_dim * 3; j++) embed[i][j] = a_embed(i, j);
     }
   }
 
@@ -90,43 +85,35 @@ struct WaveGRU {
     return mmm;
   }
 
-  void load_weights(fndarray m1, indarray m1_mask, fndarray b1, fndarray m2,
-                    indarray m2_mask, fndarray b2, fndarray m3,
-                    indarray m3_mask, fndarray b3, fndarray o1,
-                    indarray o1_mask, fndarray o1b, fndarray o2,
+  void load_weights(fndarray m, indarray m_mask, fndarray b,
+                    fndarray o1, indarray o1_mask, 
+                    fndarray o1b, fndarray o2,
                     indarray o2_mask, fndarray o2b) {
-    this->m1 = load_linear(this->b1, m1, m1_mask, b1);
-    this->m2 = load_linear(this->b2, m2, m2_mask, b2);
-    this->m3 = load_linear(this->b3, m3, m3_mask, b3);
+    this->m = load_linear(this->b, m, m_mask, b);
     this->o1 = load_linear(this->o1b, o1, o1_mask, o1b);
     this->o2 = load_linear(this->o2b, o2, o2_mask, o2b);
   }
 
   std::vector<int> inference(fndarray ft, float temperature) {
     auto rft = ft.unchecked<2>();
-    std::vector<vec> xs;
-    for (int i = 0; i < rft.shape(0); i++) {
-      xs.emplace_back(input_dim);
-      for (int j = 0; j < input_dim; j++) xs[i][j] = rft(i, j);
-    }
-
     int value = 127;
-    std::vector<int> signal(xs.size());
+    std::vector<int> signal(rft.shape(0) * repeat_factor);
     h.FillZero();
-    for (int index = 0; index < xs.size(); index++) {
-      for (int i = 0; i < embed_dim; i++) t[i] = embed[value][i];
-      for (int i = 0; i < input_dim; i++) t[embed_dim + i] = xs[index][i];
-      for (int i = 0; i < hidden_dim; i++) t[embed_dim + input_dim + i] = h[i];
-      m1.SpMM_bias(t, b1, &z, false);
-      m2.SpMM_bias(t, b2, &r, false);
+    for (int index = 0; index < signal.size(); index++) {
+      m.SpMM_bias(h, b, &zrh, false);
+
+      for (int i = 0; i < 3 * hidden_dim; i++) t[i] = embed[value][i] + rft(index / repeat_factor, i);
+      for (int i = 0; i < hidden_dim; i++) {
+        z[i] = zrh[i] + t[i];
+        r[i] = zrh[hidden_dim + i] + t[hidden_dim + i];
+      }
+
       z.Sigmoid();
       r.Sigmoid();
 
       for (int i = 0; i < hidden_dim; i++) {
-        t[embed_dim + input_dim + i] = h[i] * r[i];
+        hh[i] = zrh[hidden_dim * 2 + i]  * r[i] + t[hidden_dim * 2 + i];
       }
-
-      m3.SpMM_bias(t, b3, &hh, false);
       hh.Tanh();
       for (int i = 0; i < hidden_dim; i++) {
         h[i] = (1. - z[i]) * h[i] + z[i] * hh[i];
@@ -142,7 +129,7 @@ struct WaveGRU {
 
 PYBIND11_MODULE(wavegru_mod, m) {
   py::class_<WaveGRU>(m, "WaveGRU")
-      .def(py::init<int, int, int>())
+      .def(py::init<int, int>())
       .def("load_embed", &WaveGRU::load_embed)
       .def("load_weights", &WaveGRU::load_weights)
       .def("inference", &WaveGRU::inference);

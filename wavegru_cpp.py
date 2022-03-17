@@ -1,18 +1,13 @@
 import numpy as np
-import sys
 from wavegru_mod import WaveGRU
 
 
 def extract_weight_mask(net):
     data = {}
     data["embed_weight"] = net.embed.weight
-    data["gru_xh_zr_weight"] = net.rnn.xh_zr_fc.weight
-    data["gru_xh_zr_mask"] = net.gru_pruner.xh_zr_fc_mask
-    data["gru_xh_zr_bias"] = net.rnn.xh_zr_fc.bias
-
-    data["gru_xh_h_weight"] = net.rnn.xh_h_fc.weight
-    data["gru_xh_h_mask"] = net.gru_pruner.xh_h_fc_mask
-    data["gru_xh_h_bias"] = net.rnn.xh_h_fc.bias
+    data["gru_h_zrh_weight"] = net.rnn.h_zrh_fc.weight
+    data["gru_h_zrh_mask"] = net.gru_pruner.h_zrh_fc_mask
+    data["gru_h_zrh_bias"] = net.rnn.h_zrh_fc.bias
 
     data["o1_weight"] = net.o1.weight
     data["o1_mask"] = net.o1_pruner.mask
@@ -23,31 +18,16 @@ def extract_weight_mask(net):
     return data
 
 
-def load_wavegru_cpp(data):
+def load_wavegru_cpp(data, repeat_factor):
+    """load wavegru weight to cpp object"""
     embed = data["embed_weight"]
-    embed_dim = embed.shape[1]
-    rnn_dim = data["gru_xh_h_bias"].shape[0]
-    input_dim = data["gru_xh_zr_weight"].shape[1] - rnn_dim
-    net = WaveGRU(input_dim, embed_dim, rnn_dim)
+    rnn_dim = data["gru_h_zrh_bias"].shape[0] // 3
+    net = WaveGRU(rnn_dim, repeat_factor)
     net.load_embed(embed)
-    dim = embed_dim + input_dim + rnn_dim
-    z, r = np.split(data["gru_xh_zr_weight"].T, 2, axis=0)
-    h = data["gru_xh_h_weight"].T
-    z = np.ascontiguousarray(z)
-    r = np.ascontiguousarray(r)
-    h = np.ascontiguousarray(h)
 
-    b1, b2 = np.split(data["gru_xh_zr_bias"], 2)
-    b3 = data["gru_xh_h_bias"]
-    m1, m2, m3 = z, r, h
-
-    mask_z, mask_r = np.split(data["gru_xh_zr_mask"].T, 2, axis=0)
-    mask_h = data["gru_xh_h_mask"].T
-    mask_z = np.ascontiguousarray(mask_z)
-    mask_r = np.ascontiguousarray(mask_r)
-    mask_h = np.ascontiguousarray(mask_h)
-
-    mask1, mask2, mask3 = mask_z, mask_r, mask_h
+    m = np.ascontiguousarray(data["gru_h_zrh_weight"].T)
+    mask = np.ascontiguousarray(data["gru_h_zrh_mask"].T)
+    b = data["gru_h_zrh_bias"]
 
     o1 = np.ascontiguousarray(data["o1_weight"].T)
     masko1 = np.ascontiguousarray(data["o1_mask"].T)
@@ -57,22 +37,6 @@ def load_wavegru_cpp(data):
     masko2 = np.ascontiguousarray(data["o2_mask"].T)
     o2b = data["o2_bias"]
 
-    net.load_weights(
-        m1,
-        mask1,
-        b1,
-        m2,
-        mask2,
-        b2,
-        m3,
-        mask3,
-        b3,
-        o1,
-        masko1,
-        o1b,
-        o2,
-        masko2,
-        o2b,
-    )
+    net.load_weights(m, mask, b, o1, masko1, o1b, o2, masko2, o2b)
 
     return net
