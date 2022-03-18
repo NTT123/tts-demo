@@ -39,6 +39,7 @@ struct WaveGRU {
   vec o1b, o2b;
   vec t;
   vec h;
+  vec logits;
   mat o1, o2;
   std::vector<vec> embed;
 
@@ -55,7 +56,8 @@ struct WaveGRU {
         fco2(256),
         h(hidden_dim),
         o1b(hidden_dim),
-        o2b(256) {
+        o2b(256),
+        logits(256) {
     m = create_mat(hidden_dim, 3*hidden_dim);
     o1 = create_mat(hidden_dim, hidden_dim);
     o2 = create_mat(hidden_dim, 256);
@@ -120,6 +122,18 @@ struct WaveGRU {
       }
       o1.SpMM_bias(h, o1b, &fco1, true);
       o2.SpMM_bias(fco1, o2b, &fco2, false);
+      auto max_logit = fco2[0];
+      for (int i = 1; i <= 255; ++i) {
+        max_logit = max(max_logit, fco2[i]);
+      }
+      float total = 0.0;
+      for (int i = 0; i <= 255; ++i) {
+        logits[i] = csrblocksparse::fast_exp(fco2[i] - max_logit);
+        total += logits[i];
+      }
+      for (int i = 0; i <= 255; ++i) {
+        if (logits[i] < total / 256.0) fco2[i] = -1e9;
+      }
       value = fco2.Sample(temperature);
       signal[index] = value;
     }
