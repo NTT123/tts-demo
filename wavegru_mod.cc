@@ -132,7 +132,7 @@ struct WaveGRU {
         total += logits[i];
       }
       for (int i = 0; i <= 255; ++i) {
-        if (logits[i] < total / 256.0) fco2[i] = -1e9;
+        if (logits[i] < total / 1024.0) fco2[i] = -1e9;
       }
       value = fco2.Sample(temperature);
       signal[index] = value;
