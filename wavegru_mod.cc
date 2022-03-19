@@ -122,18 +122,18 @@ struct WaveGRU {
       }
       o1.SpMM_bias(h, o1b, &fco1, true);
       o2.SpMM_bias(fco1, o2b, &fco2, false);
-      auto max_logit = fco2[0];
-      for (int i = 1; i <= 255; ++i) {
-        max_logit = max(max_logit, fco2[i]);
-      }
-      float total = 0.0;
-      for (int i = 0; i <= 255; ++i) {
-        logits[i] = csrblocksparse::fast_exp(fco2[i] - max_logit);
-        total += logits[i];
-      }
-      for (int i = 0; i <= 255; ++i) {
-        if (logits[i] < total / 1024.0) fco2[i] = -1e9;
-      }
+      // auto max_logit = fco2[0];
+      // for (int i = 1; i <= 255; ++i) {
+      //   max_logit = max(max_logit, fco2[i]);
+      // }
+      // float total = 0.0;
+      // for (int i = 0; i <= 255; ++i) {
+      //   logits[i] = csrblocksparse::fast_exp(fco2[i] - max_logit);
+      //   total += logits[i];
+      // }
+      // for (int i = 0; i <= 255; ++i) {
+      //   if (logits[i] < total / 1024.0) fco2[i] = -1e9;
+      // }
       value = fco2.Sample(temperature);
       signal[index] = value;
     }

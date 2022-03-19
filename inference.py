@@ -69,7 +69,7 @@ def mel_to_wav(net, netcpp, mel, config):
     mel = np.pad(mel, [(0, 0), (pad, pad), (0, 0)], mode="edge")
     ft = wavegru_inference(net, mel)
     ft = jax.device_get(ft[0])
-    wav = netcpp.inference(ft, 1.0)
+    wav = netcpp.inference(ft, 0.9)
     wav = np.array(wav)
     wav = librosa.mu_expand(wav - 127, mu=255)
     wav = librosa.effects.deemphasis(wav, coef=0.86)

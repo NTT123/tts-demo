@@ -10,4 +10,10 @@ pinned: false
 license: mit
 ---
 
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces#reference
+
+## Build wavenet-cpp
+
+
+    ./bazelisk-linux-amd64 build wavegru_mod -c opt --copt=-march=native
+    cp -f bazel-bin/wavegru_mod.so .
+
