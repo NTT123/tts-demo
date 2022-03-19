@@ -371,6 +371,7 @@ class Tacotron(pax.Module):
         x = x[:, : self.rr, :]
         x = jnp.reshape(x, (N, self.rr, -1))
         mel = x[..., :-1]
+        mel = jnp.clip(mel, a_min=-11.0, a_max=1.5)
         eos = x[..., -1]
         return attn_state, decoder_rnn_states, rng_key, (mel, eos)
 
