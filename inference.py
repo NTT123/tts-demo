@@ -41,8 +41,6 @@ def text_to_mel(net, text, alphabet, config):
             tokens.append(alphabet.index(c))
     tokens = jnp.array(tokens, dtype=jnp.int32)
     mel = tacotron_inference_fn(net, tokens[None])
-    print(jnp.min(mel), jnp.max(mel))
-    mel = jnp.clip(mel, a_min=-11.0, a_max=1.5)
     return mel
 
 
