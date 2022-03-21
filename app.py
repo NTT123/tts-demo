@@ -10,7 +10,7 @@ from inference import load_tacotron_model, load_wavegru_net, mel_to_wav, text_to
 from wavegru_cpp import extract_weight_mask, load_wavegru_cpp
 
 alphabet, tacotron_net, tacotron_config = load_tacotron_model(
-    "./alphabet.txt", "./tacotron.toml", "./pretrained_model_ljs_500k.ckpt"
+    "./alphabet.txt", "./tacotron.toml", "./pretrained_model_ljs_570k.ckpt"
 )
 
 
