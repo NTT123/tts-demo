@@ -49,4 +49,4 @@ gr.Interface(
     theme="default",
     allow_screenshot=False,
     allow_flagging="never",
-).launch(debug=False)
+).launch(debug=True, enable_queue=True)
