@@ -62,21 +62,34 @@ class Upsample(pax.Module):
     Upsample melspectrogram to match raw audio sample rate.
     """
 
-    def __init__(self, input_dim, rnn_dim, upsample_factors):
+    def __init__(
+        self, input_dim, hidden_dim, rnn_dim, upsample_factors, has_linear_output=False
+    ):
         super().__init__()
         self.input_conv = pax.Sequential(
-            pax.Conv1D(input_dim, rnn_dim, 1, with_bias=False),
-            pax.LayerNorm(rnn_dim, -1, True, True),
+            pax.Conv1D(input_dim, hidden_dim, 1, with_bias=False),
+            pax.LayerNorm(hidden_dim, -1, True, True),
         )
         self.upsample_factors = upsample_factors
         self.dilated_convs = [
-            dilated_residual_conv_block(rnn_dim, 3, 1, 2**i) for i in range(5)
+            dilated_residual_conv_block(hidden_dim, 3, 1, 2**i) for i in range(5)
         ]
         self.up_factors = upsample_factors[:-1]
-        self.up_blocks = [up_block(rnn_dim, rnn_dim, x) for x in self.up_factors[:-1]]
+        self.up_blocks = [
+            up_block(hidden_dim, hidden_dim, x) for x in self.up_factors[:-1]
+        ]
         self.up_blocks.append(
-            up_block(rnn_dim, 3 * rnn_dim, self.up_factors[-1], relu=False)
+            up_block(
+                hidden_dim,
+                hidden_dim if has_linear_output else 3 * rnn_dim,
+                self.up_factors[-1],
+                relu=False,
+            )
         )
+        if has_linear_output:
+            self.x2zrh_fc = pax.Linear(hidden_dim, rnn_dim * 3)
+        self.has_linear_output = has_linear_output
+
         self.final_tile = upsample_factors[-1]
 
     def __call__(self, x, no_repeat=False):
@@ -88,6 +101,9 @@ class Upsample(pax.Module):
 
         for f in self.up_blocks:
             x = f(x)
+
+        if self.has_linear_output:
+            x = self.x2zrh_fc(x)
 
         if no_repeat:
             return x
@@ -106,7 +122,13 @@ class GRU(pax.Module):
     def __init__(self, hidden_dim: int):
         super().__init__()
         self.hidden_dim = hidden_dim
-        self.h_zrh_fc = pax.Linear(hidden_dim, hidden_dim * 3)
+        self.h_zrh_fc = pax.Linear(
+            hidden_dim,
+            hidden_dim * 3,
+            w_init=jax.nn.initializers.variance_scaling(
+                1, "fan_out", "truncated_normal"
+            ),
+        )
 
     def initial_state(self, batch_size: int) -> GRUState:
         """Create an all zeros initial state."""
@@ -137,7 +159,7 @@ class Pruner(pax.Module):
 
     def compute_sparsity(self, step):
         t = jnp.power(1 - (step * 1.0 - 1_000) / 200_000, 3)
-        z = 0.9 * jnp.clip(1.0 - t, a_min=0, a_max=1)
+        z = 0.95 * jnp.clip(1.0 - t, a_min=0, a_max=1)
         return z
 
     def prune(self, step, weights):
@@ -204,11 +226,21 @@ class WaveGRU(pax.Module):
     WaveGRU vocoder model.
     """
 
-    def __init__(self, mel_dim=80, rnn_dim=512, upsample_factors=(5, 3, 20)):
+    def __init__(
+        self,
+        mel_dim=80,
+        rnn_dim=1024,
+        upsample_factors=(5, 3, 20),
+        has_linear_output=False,
+    ):
         super().__init__()
         self.embed = pax.Embed(256, 3 * rnn_dim)
         self.upsample = Upsample(
-            input_dim=mel_dim, rnn_dim=rnn_dim, upsample_factors=upsample_factors
+            input_dim=mel_dim,
+            hidden_dim=512,
+            rnn_dim=rnn_dim,
+            upsample_factors=upsample_factors,
+            has_linear_output=has_linear_output,
         )
         self.rnn = GRU(rnn_dim)
         self.o1 = pax.Linear(rnn_dim, rnn_dim)

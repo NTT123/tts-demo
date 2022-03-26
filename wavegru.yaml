@@ -8,7 +8,7 @@ n_fft: 2048
 
 ## wavegru
 embed_dim: 32
-rnn_dim: 512
+rnn_dim: 1024
 frames_per_sequence: 67
 num_pad_frames: 62
 upsample_factors: [5, 3, 20]

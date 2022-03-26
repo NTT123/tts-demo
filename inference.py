@@ -51,6 +51,7 @@ def load_wavegru_net(config_file, model_file):
         mel_dim=config["mel_dim"],
         rnn_dim=config["rnn_dim"],
         upsample_factors=config["upsample_factors"],
+        has_linear_output=True,
     )
     _, net, _ = load_wavegru_ckpt(net, None, model_file)
     net = net.eval()
