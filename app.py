@@ -14,7 +14,7 @@ alphabet, tacotron_net, tacotron_config = load_tacotron_model(
 )
 
 
-wavegru_config, wavegru_net = load_wavegru_net("./wavegru.yaml", "./wavegru_vocoder_1024_v3_1310000.ckpt")
+wavegru_config, wavegru_net = load_wavegru_net("./wavegru.yaml", "./wavegru_vocoder_1024_v3_1330000.ckpt")
 
 wave_cpp_weight_mask = extract_weight_mask(wavegru_net)
 wavecpp = load_wavegru_cpp(wave_cpp_weight_mask, wavegru_config["upsample_factors"][-1])
