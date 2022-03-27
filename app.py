@@ -15,7 +15,7 @@ def speak(text):
     )
 
     wavegru_config, wavegru_net = load_wavegru_net(
-        "./wavegru.yaml", "./wavegru_vocoder_1024_v3_1340000.ckpt"
+        "./wavegru.yaml", "./wavegru_vocoder_1024_v3_1400000.ckpt"
     )
 
     wave_cpp_weight_mask = extract_weight_mask(wavegru_net)
