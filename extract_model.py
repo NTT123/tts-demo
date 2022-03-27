@@ -1,5 +1,5 @@
 import pickle
 
-dic = pickle.load(open("./wavegru.ckpt", "rb"))
+dic = pickle.load(open("./wavegru_vocoder_1024_v3_1310000.ckpt", "rb"))
 del dic["optim_state_dict"]
-pickle.dump(dic, open("./wavegru.ckpt", "wb"))
+pickle.dump(dic, open("./wavegru_vocoder_1024_v3_1310000.ckpt", "wb"))
