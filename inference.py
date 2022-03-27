@@ -67,7 +67,7 @@ def mel_to_wav(net, netcpp, mel, config):
     if len(mel.shape) == 2:
         mel = mel[None]
     pad = config["num_pad_frames"] // 2 + 2
-    mel = np.pad(mel, [(0, 0), (pad, pad), (0, 0)], mode="reflect")
+    mel = np.pad(mel, [(0, 0), (pad, pad), (0, 0)], mode="edge")
     ft = wavegru_inference(net, mel)
     ft = jax.device_get(ft[0])
     wav = netcpp.inference(ft, 1.0)
