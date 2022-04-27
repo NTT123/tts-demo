@@ -16,6 +16,7 @@ MEL_DIM = 80 # the dimension of melspectrogram features
 MEL_MIN = 1e-5
 PAD = "_" # padding character
 PAD_TOKEN = 0
+END_CHARACTER = "■"  # to signal the end of the transcript
 TEST_DATA_SIZE = 1024
 
 # model

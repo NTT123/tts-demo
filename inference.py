@@ -1,3 +1,5 @@
+import os
+
 import jax
 import jax.numpy as jnp
 import librosa
@@ -13,6 +15,11 @@ from utils import (
     load_wavegru_config,
 )
 from wavegru import WaveGRU
+
+os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = "./espeak/usr/lib/libespeak-ng.so.1.1.51"
+from phonemizer.backend import EspeakBackend
+
+backend = EspeakBackend("en-us", preserve_punctuation=True, with_stress=True)
 
 
 def load_tacotron_model(alphabet_file, config_file, model_file):
@@ -34,6 +41,8 @@ tacotron_inference_fn = pax.pure(lambda net, text: net.inference(text, max_len=2
 def text_to_mel(net, text, alphabet, config):
     """convert text to mel spectrogram"""
     text = english_cleaners(text)
+    text = backend.phonemize([text], strip=True)[0]
+    text = text + config["END_CHARACTER"]
     text = text + config["PAD"] * (100 - (len(text) % 100))
     tokens = []
     for c in text:

@@ -27,9 +27,4 @@ saved_model/**/* filter=lfs diff=lfs merge=lfs -text
 *tfevents* filter=lfs diff=lfs merge=lfs -text
 bazelisk-linux-amd64 filter=lfs diff=lfs merge=lfs -text
 wavegru_mod.so filter=lfs diff=lfs merge=lfs -text
-pretrained_model_ljs_600k.ckpt filter=lfs diff=lfs merge=lfs -text
-wavegru_vocoder_1024_v3_1310000.ckpt filter=lfs diff=lfs merge=lfs -text
-wavegru_vocoder_1024_v3_1330000.ckpt filter=lfs diff=lfs merge=lfs -text
-wavegru_vocoder_1024_v3_1340000.ckpt filter=lfs diff=lfs merge=lfs -text
-wavegru_vocoder_1024_v3_1360000.ckpt filter=lfs diff=lfs merge=lfs -text
-wavegru_vocoder_1024_v3_1400000.ckpt filter=lfs diff=lfs merge=lfs -text
+*.ckpt filter=lfs diff=lfs merge=lfs -text

@@ -3,6 +3,10 @@
 # os.system("./bazelisk-linux-amd64 clean --expunge")
 # os.system("./bazelisk-linux-amd64 build wavegru_mod -c opt --copt=-march=native")
 
+# install espeak
+import os
+
+os.system("bash ./install_espeak_ng.sh")
 
 import gradio as gr
 from inference import load_tacotron_model, load_wavegru_net, mel_to_wav, text_to_mel
@@ -11,7 +15,7 @@ from wavegru_cpp import extract_weight_mask, load_wavegru_cpp
 
 def speak(text):
     alphabet, tacotron_net, tacotron_config = load_tacotron_model(
-        "./alphabet.txt", "./tacotron.toml", "./pretrained_model_ljs_600k.ckpt"
+        "./alphabet.txt", "./tacotron.toml", "./tacotrons_ljs_24k_v1_0250000.ckpt"
     )
 
     wavegru_config, wavegru_net = load_wavegru_net(

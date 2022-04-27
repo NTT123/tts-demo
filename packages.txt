@@ -1,1 +1,7 @@
 libsndfile1-dev
+make
+autoconf
+automake
+libtool
+pkg-config
+gcc
