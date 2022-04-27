@@ -373,6 +373,7 @@ class Tacotron(pax.Module):
         mel = x[..., :-1]
         eos_logit = x[..., -1]
         eos_pr = jax.nn.sigmoid(eos_logit[0, -1])
+        eos_pr = jnp.where(eos_pr < 0.1, 0.0, eos_pr)
         rng_key, eos_rng_key = jax.random.split(rng_key)
         eos = jax.random.bernoulli(eos_rng_key, p=eos_pr)
         return attn_state, decoder_rnn_states, rng_key, (mel, eos)
