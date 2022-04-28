@@ -6,7 +6,8 @@
 # install espeak
 import os
 
-os.system("bash ./install_espeak_ng.sh")
+if not os.path.isdir("./espeak"):
+    os.system("bash ./install_espeak_ng.sh")
 
 import gradio as gr
 from inference import load_tacotron_model, load_wavegru_net, mel_to_wav, text_to_mel
