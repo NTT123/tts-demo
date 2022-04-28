@@ -15,11 +15,11 @@ from wavegru_cpp import extract_weight_mask, load_wavegru_cpp
 
 def speak(text):
     alphabet, tacotron_net, tacotron_config = load_tacotron_model(
-        "./alphabet.txt", "./tacotron.toml", "./tacotrons_ljs_24k_v1_0250000.ckpt"
+        "./alphabet.txt", "./tacotron.toml", "./tacotrons_ljs_24k_v1_0300000.ckpt"
     )
 
     wavegru_config, wavegru_net = load_wavegru_net(
-        "./wavegru.yaml", "./wavegru_vocoder_1024_v3_1400000.ckpt"
+        "./wavegru.yaml", "./wavegru_vocoder_1024_v3_1810000.ckpt"
     )
 
     wave_cpp_weight_mask = extract_weight_mask(wavegru_net)
